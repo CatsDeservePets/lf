@@ -268,7 +268,7 @@ func (e *setExpr) eval(app *app, args []string) {
 		toks := strings.Split(e.val, ":")
 		for _, s := range toks {
 			switch s {
-			case "size", "time", "atime", "ctime", "perm", "user", "group":
+			case "size", "time", "atime", "ctime", "perm", "user", "group", "custom":
 			default:
 				app.ui.echoerr("info: should consist of 'size', 'time', 'atime', 'ctime', 'perm', 'user' or 'group' separated with colon")
 				return
@@ -328,6 +328,8 @@ func (e *setExpr) eval(app *app, args []string) {
 		}
 	case "previewer":
 		gOpts.previewer = replaceTilde(e.val)
+	case "infoScript":
+		gOpts.infoScript = replaceTilde(e.val)
 	case "promptfmt":
 		gOpts.promptfmt = e.val
 	case "ratios":

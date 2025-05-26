@@ -163,6 +163,30 @@ func (win *win) renew(w, h, x, y int) {
 	win.w, win.h, win.x, win.y = w, h, x, y
 }
 
+func stripAnsi(s string) string {
+	var b strings.Builder
+	slen := len(s)
+	for i := 0; i < slen; i++ {
+		r, w := utf8.DecodeRuneInString(s[i:])
+
+		if r == gEscapeCode && i+1 < slen && s[i+1] == '[' {
+			j := strings.IndexAny(s[i:min(slen, i+64)], "mK")
+			if j == -1 {
+				continue
+			}
+
+			i += j
+			continue
+		}
+
+		i += w - 1
+
+		b.WriteRune(r)
+	}
+
+	return b.String()
+}
+
 func printLength(s string) int {
 	ind := 0
 	off := 0
@@ -479,7 +503,7 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		maxFilenameWidth := maxWidth - 1 - runeSliceWidth(icon)
 
 		info := fileInfo(f, dir, userWidth, groupWidth, customWidth)
-		infolen := len(info)
+		infolen := printLength(info)
 		showInfo := infolen > 0 && 2*infolen < maxWidth
 		if showInfo {
 			maxFilenameWidth -= infolen
@@ -498,7 +522,7 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		}
 
 		if showInfo {
-			filename = append(filename, []rune(info)...)
+			filename = append(filename, []rune(stripAnsi(info))...)
 		}
 
 		if i == dir.pos {
@@ -564,7 +588,7 @@ func getCustomWidth(dir *dir) int {
 	maxw := 0
 
 	for _, v := range dir.customInfo {
-		maxw = max(len(v), maxw)
+		maxw = max(printLength(v), maxw)
 	}
 
 	return maxw

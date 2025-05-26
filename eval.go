@@ -328,8 +328,8 @@ func (e *setExpr) eval(app *app, args []string) {
 		}
 	case "previewer":
 		gOpts.previewer = replaceTilde(e.val)
-	case "infoScript":
-		gOpts.infoScript = replaceTilde(e.val)
+	case "infoscript":
+		gOpts.infoscript = replaceTilde(e.val)
 	case "promptfmt":
 		gOpts.promptfmt = e.val
 	case "ratios":

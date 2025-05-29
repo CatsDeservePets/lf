@@ -313,8 +313,10 @@ func infotimefmt(t time.Time) string {
 	return t.Format(gOpts.infotimefmtold)
 }
 
-func fileInfo(f *file, d *dir, userWidth int, groupWidth int, customWidth int) string {
+func fileInfo(f *file, d *dir, userWidth int, groupWidth int, customWidth int) (string, string, int) {
 	var info strings.Builder
+	var custom string
+	var off int
 
 	for _, s := range getInfo(d.path) {
 		switch s {
@@ -353,13 +355,17 @@ func fileInfo(f *file, d *dir, userWidth int, groupWidth int, customWidth int) s
 		case "group":
 			fmt.Fprintf(&info, " %-*s", groupWidth, groupName(f.FileInfo))
 		case "custom":
-			fmt.Fprintf(&info, " %-*s", customWidth, d.customInfo[f.Name()])
+			// To allow for the usage of escape sequences, store `custom`
+			// separately and print it later using the offset.
+			off = info.Len()
+			fmt.Fprintf(&info, " %*s", customWidth, "")
+			custom = fmt.Sprintf(" %-*s", customWidth, d.customInfo[f.Name()])
 		default:
 			log.Printf("unknown info type: %s", s)
 		}
 	}
 
-	return info.String()
+	return info.String(), custom, off
 }
 
 type dirContext struct {
@@ -427,7 +433,7 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 	var groupWidth int
 	var customWidth int
 
-	// Only fetch user/group widths if configured to display them
+	// Only fetch user/group/custom widths if configured to display them
 	for _, s := range getInfo(dir.path) {
 		switch s {
 		case "user":
@@ -502,8 +508,8 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		// subtract space for tag and icon
 		maxFilenameWidth := maxWidth - 1 - runeSliceWidth(icon)
 
-		info := fileInfo(f, dir, userWidth, groupWidth, customWidth)
-		infolen := printLength(info)
+		info, custom, off := fileInfo(f, dir, userWidth, groupWidth, customWidth)
+		infolen := len(info)
 		showInfo := infolen > 0 && 2*infolen < maxWidth
 		if showInfo {
 			maxFilenameWidth -= infolen
@@ -522,7 +528,8 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		}
 
 		if showInfo {
-			filename = append(filename, []rune(stripAnsi(info))...)
+			filename = append(filename, []rune(info)...)
+			off += lnwidth + 2 + runeSliceWidth(icon) + maxFilenameWidth
 		}
 
 		if i == dir.pos {
@@ -542,6 +549,8 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 			line := append(icon, filename...)
 			line = append(line, ' ')
 			win.print(ui.screen, lnwidth+2, i, st, fmt.Sprintf(cursorFmt, string(line)))
+
+			custom = fmt.Sprintf(cursorFmt, stripAnsi(custom))
 		} else {
 			if tag == " " {
 				win.print(ui.screen, lnwidth+1, i, st, " ")
@@ -560,6 +569,11 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 
 			line := append(filename, ' ')
 			win.print(ui.screen, lnwidth+2+runeSliceWidth(icon), i, st, string(line))
+		}
+
+		// print over the empty space we reserved for the custom info
+		if showInfo {
+			win.print(ui.screen, off, i, st, custom)
 		}
 	}
 }

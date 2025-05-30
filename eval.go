@@ -595,6 +595,12 @@ func onChdir(app *app) {
 	}
 }
 
+func onLoad(app *app, files []string) {
+	if cmd, ok := gOpts.cmds["on-load"]; ok {
+		cmd.eval(app, files)
+	}
+}
+
 func onFocusGained(app *app) {
 	if cmd, ok := gOpts.cmds["on-focus-gained"]; ok {
 		cmd.eval(app, nil)

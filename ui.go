@@ -313,7 +313,7 @@ func infotimefmt(t time.Time) string {
 	return t.Format(gOpts.infotimefmtold)
 }
 
-func fileInfo(f *file, d *dir, userWidth int, groupWidth int, customWidth int) (string, string, int) {
+func fileInfo(f *file, d *dir, context *dirContext, userWidth int, groupWidth int, customWidth int) (string, string, int) {
 	var info strings.Builder
 	var custom string
 	var off int
@@ -359,7 +359,7 @@ func fileInfo(f *file, d *dir, userWidth int, groupWidth int, customWidth int) (
 			// separately and print it later using the offset.
 			off = info.Len()
 			fmt.Fprintf(&info, " %*s", customWidth, "")
-			custom = fmt.Sprintf(" %-*s", customWidth, d.customInfo[f.Name()])
+			custom = fmt.Sprintf(" %-*s", customWidth, context.customInfo[f.path])
 		default:
 			log.Printf("unknown info type: %s", s)
 		}
@@ -372,6 +372,7 @@ type dirContext struct {
 	selections map[string]int
 	saves      map[string]bool
 	tags       map[string]string
+	customInfo map[string]string
 }
 
 type dirRole byte
@@ -441,7 +442,7 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		case "group":
 			groupWidth = getGroupWidth(dir, beg, end)
 		case "custom":
-			customWidth = getCustomWidth(dir)
+			customWidth = getCustomWidth(context)
 		}
 
 		if userWidth > 0 && groupWidth > 0 && customWidth > 0 {
@@ -508,7 +509,7 @@ func (win *win) printDir(ui *ui, dir *dir, context *dirContext, dirStyle *dirSty
 		// subtract space for tag and icon
 		maxFilenameWidth := maxWidth - 1 - runeSliceWidth(icon)
 
-		info, custom, off := fileInfo(f, dir, userWidth, groupWidth, customWidth)
+		info, custom, off := fileInfo(f, dir, context, userWidth, groupWidth, customWidth)
 		infolen := len(info)
 		showInfo := infolen > 0 && 2*infolen < maxWidth
 		if showInfo {
@@ -598,10 +599,10 @@ func getGroupWidth(dir *dir, beg int, end int) int {
 	return maxw
 }
 
-func getCustomWidth(dir *dir) int {
+func getCustomWidth(context *dirContext) int {
 	maxw := 0
 
-	for _, v := range dir.customInfo {
+	for _, v := range context.customInfo {
 		maxw = max(printLength(v), maxw)
 	}
 
@@ -1084,7 +1085,7 @@ func (ui *ui) dirOfWin(nav *nav, wind int) *dir {
 
 func (ui *ui) draw(nav *nav) {
 	st := tcell.StyleDefault
-	context := dirContext{selections: nav.selections, saves: nav.saves, tags: nav.tags}
+	context := dirContext{selections: nav.selections, saves: nav.saves, tags: nav.tags, customInfo: nav.customInfo}
 
 	ui.screen.Clear()
 

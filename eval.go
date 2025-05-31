@@ -328,8 +328,6 @@ func (e *setExpr) eval(app *app, args []string) {
 		}
 	case "previewer":
 		gOpts.previewer = replaceTilde(e.val)
-	case "infoscript":
-		gOpts.infoscript = replaceTilde(e.val)
 	case "promptfmt":
 		gOpts.promptfmt = e.val
 	case "ratios":
@@ -2247,6 +2245,31 @@ func (e *callExpr) eval(app *app, args []string) {
 			[]rune(string(app.ui.cmdAccLeft)[end2:]),
 		)
 		update(app)
+	case "addcustominfo":
+		if len(e.args) != 1 {
+			app.ui.echoerr("addcustominfo: requires an argument formatted like $LS_COLORS")
+			return
+		}
+
+		for _, entry := range strings.Split(e.args[0], ":") {
+			if entry == "" {
+				continue
+			}
+
+			pair := strings.Split(entry, "=")
+
+			if len(pair) != 2 {
+				log.Printf("invalid custominfo entry: %s", entry)
+				return
+			}
+
+			k, v := pair[0], pair[1]
+			if len(strings.Trim(v, " ")) == 0 {
+				delete(app.nav.customInfo, k)
+			} else {
+				app.nav.customInfo[k] = v
+			}
+		}
 	default:
 		cmd, ok := gOpts.cmds[e.name]
 		if !ok {

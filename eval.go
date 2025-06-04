@@ -594,6 +594,11 @@ func onChdir(app *app) {
 }
 
 func onLoad(app *app, files []string) {
+	// prevent infinite loops
+	if !gOpts.dircache {
+		return
+	}
+
 	if cmd, ok := gOpts.cmds["on-load"]; ok {
 		cmd.eval(app, files)
 	}

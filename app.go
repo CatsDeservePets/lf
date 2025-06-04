@@ -386,8 +386,6 @@ func (app *app) loop() {
 			}
 			app.ui.draw(app.nav)
 		case d := <-app.nav.dirChan:
-			onLoad(app, d.fileNames())
-
 			if gOpts.dircache {
 				prev, ok := app.nav.dirCache[d.path]
 				if ok {
@@ -433,7 +431,7 @@ func (app *app) loop() {
 			}
 
 			app.watchDir(d)
-
+			onLoad(app, d.fileNames())
 			app.ui.draw(app.nav)
 		case r := <-app.nav.regChan:
 			app.nav.regCache[r.path] = r
@@ -450,8 +448,6 @@ func (app *app) loop() {
 
 			app.ui.draw(app.nav)
 		case f := <-app.nav.fileChan:
-			onLoad(app, []string{filepath.Dir(f.path)})
-
 			for _, dir := range app.nav.dirCache {
 				if dir.path != filepath.Dir(f.path) {
 					continue
@@ -473,6 +469,8 @@ func (app *app) loop() {
 			if app.ui.msgIsStat {
 				app.ui.loadFileInfo(app.nav)
 			}
+
+			onLoad(app, []string{filepath.Dir(f.path)})
 			app.ui.draw(app.nav)
 		case path := <-app.nav.delChan:
 			delete(app.nav.dirCache, path)

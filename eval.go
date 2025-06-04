@@ -2246,29 +2246,26 @@ func (e *callExpr) eval(app *app, args []string) {
 		)
 		update(app)
 	case "addcustominfo":
-		if len(e.args) != 1 {
-			app.ui.echoerr("addcustominfo: requires an argument formatted like $LS_COLORS")
+		var k, v string
+		switch len(e.args) {
+		case 1:
+			k, v = e.args[0], ""
+		case 2:
+			k, v = e.args[0], e.args[1]
+		default:
+			app.ui.echoerr("addcustominfo: requires either 1 or 2 arguments")
 			return
 		}
 
-		for _, entry := range strings.Split(e.args[0], ":") {
-			if entry == "" {
-				continue
-			}
+		path, err := filepath.Abs(k)
+		if err != nil {
+			app.ui.echoerrf("addcustominfo: %s", err)
+		}
 
-			pair := strings.Split(entry, "=")
-
-			if len(pair) != 2 {
-				log.Printf("invalid custominfo entry: %s", entry)
-				return
-			}
-
-			k, v := pair[0], pair[1]
-			if len(strings.Trim(v, " ")) == 0 {
-				delete(app.nav.customInfo, k)
-			} else {
-				app.nav.customInfo[k] = v
-			}
+		if len(strings.Trim(v, " ")) == 0 {
+			delete(app.nav.customInfo, path)
+		} else {
+			app.nav.customInfo[path] = v
 		}
 	default:
 		cmd, ok := gOpts.cmds[e.name]

@@ -163,30 +163,6 @@ func (win *win) renew(w, h, x, y int) {
 	win.w, win.h, win.x, win.y = w, h, x, y
 }
 
-func stripAnsi(s string) string {
-	var b strings.Builder
-	slen := len(s)
-	for i := 0; i < slen; i++ {
-		r, w := utf8.DecodeRuneInString(s[i:])
-
-		if r == gEscapeCode && i+1 < slen && s[i+1] == '[' {
-			j := strings.IndexAny(s[i:min(slen, i+64)], "mK")
-			if j == -1 {
-				continue
-			}
-
-			i += j
-			continue
-		}
-
-		i += w - 1
-
-		b.WriteRune(r)
-	}
-
-	return b.String()
-}
-
 func printLength(s string) int {
 	ind := 0
 	off := 0

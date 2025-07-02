@@ -165,8 +165,6 @@ func (im iconMap) get(f *file) iconDef {
 		key = "su"
 	case f.Mode()&os.ModeSetgid != 0:
 		key = "sg"
-	case f.Mode()&0o111 != 0:
-		key = "ex"
 	}
 
 	if val, ok := im.icons[key]; ok {
@@ -187,6 +185,13 @@ func (im iconMap) get(f *file) iconDef {
 
 	if val, ok := im.icons["*"+strings.ToLower(f.ext)]; ok {
 		return val
+	}
+
+	// Late exec test ensures other icons aren't overridden
+	if f.Mode()&0o111 != 0 {
+		if val, ok := im.icons["ex"]; ok {
+			return val
+		}
 	}
 
 	if val, ok := im.icons["fi"]; ok {

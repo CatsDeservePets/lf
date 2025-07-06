@@ -2344,6 +2344,29 @@ func (e *callExpr) eval(app *app, args []string) {
 		// allows us to use visual mode inside search, find etc.
 		dir.visualAnchor = -1
 		normal(app)
+	case "visual-unselect":
+		if !app.nav.init {
+			return
+		}
+		dir := app.nav.currDir()
+		for _, path := range dir.visualSelections() {
+			if _, ok := app.nav.selections[path]; ok {
+				delete(app.nav.selections, path)
+				app.nav.selectionInd--
+			}
+		}
+		dir.visualAnchor = -1
+		normal(app)
+	case "visual-toggle":
+		if !app.nav.init {
+			return
+		}
+		dir := app.nav.currDir()
+		for _, path := range dir.visualSelections() {
+			app.nav.toggleSelection(path)
+		}
+		dir.visualAnchor = -1
+		normal(app)
 	case "visual-discard":
 		if !app.nav.init {
 			return

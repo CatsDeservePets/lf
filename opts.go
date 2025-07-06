@@ -307,7 +307,6 @@ func init() {
 		"[":          &callExpr{"jump-prev", nil, 1},
 		"]":          &callExpr{"jump-next", nil, 1},
 		"t":          &callExpr{"tag-toggle", nil, 1},
-		"u":          &callExpr{"unselect", nil, 1},
 		"y":          &callExpr{"copy", nil, 1},
 		"d":          &callExpr{"cut", nil, 1},
 		"c":          &callExpr{"clear", nil, 1},
@@ -355,12 +354,14 @@ func init() {
 	gOpts.nkeys["<space>"] = &listExpr{[]expr{&callExpr{"toggle", nil, 1}, &callExpr{"down", nil, 1}}, 1}
 	gOpts.nkeys["V"] = &callExpr{"visual", nil, 1}
 	gOpts.nkeys["v"] = &callExpr{"invert", nil, 1}
+	gOpts.nkeys["u"] = &callExpr{"unselect", nil, 1}
 
 	// now do the same for visual mode
 	gOpts.vkeys = maps.Clone(keys)
 	gOpts.vkeys["<esc>"] = &callExpr{"visual-discard", nil, 1}
 	gOpts.vkeys["V"] = &callExpr{"visual-accept", nil, 1}
 	gOpts.vkeys["o"] = &callExpr{"visual-change", nil, 1}
+	gOpts.vkeys["u"] = &callExpr{"visual-unselect", nil, 1}
 
 	// command line mode bindings can be assigned directly
 	gOpts.cmdkeys = map[string]expr{

@@ -115,6 +115,8 @@ var (
 		"visual-accept",
 		"visual-discard",
 		"visual-change",
+		"visual-toggle",
+		"visual-unselect",
 	}
 
 	gOptWords      = getOptWords(gOpts)

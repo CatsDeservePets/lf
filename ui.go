@@ -858,6 +858,7 @@ func (ui *ui) loadFileInfo(nav *nav) {
 	replace("%S", fmt.Sprintf("%4s", humanize(curr.Size())))
 	replace("%t", curr.ModTime().Format(gOpts.timefmt))
 	replace("%l", curr.linkTarget)
+	replace("%f", curr.Name())
 
 	var fileInfo strings.Builder
 	for _, section := range strings.Split(statfmt, "\x1f") {

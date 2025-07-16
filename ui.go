@@ -1021,6 +1021,11 @@ func (ui *ui) drawRuler(nav *nav) {
 			result = strconv.Itoa(tot)
 		case "%h":
 			result = strconv.Itoa(hid)
+		case "%H":
+			result = strconv.Itoa(hid)
+			if result == "0" {
+				result = ""
+			}
 		case "%P":
 			result = percentage
 		case "%d":

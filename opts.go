@@ -39,6 +39,7 @@ var gOpts struct {
 	anchorfind       bool
 	autoquit         bool
 	borderfmt        string
+	classify         bool
 	copyfmt          string
 	cursoractivefmt  string
 	cursorparentfmt  string
@@ -207,6 +208,7 @@ func getLocale(path string) string {
 func init() {
 	gOpts.anchorfind = true
 	gOpts.autoquit = true
+	gOpts.classify = false
 	gOpts.dircache = true
 	gOpts.dircounts = false
 	gOpts.dirfirst = true

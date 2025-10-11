@@ -352,8 +352,6 @@ func (sm styleMap) get(f *file) tcell.Style {
 		key = "su"
 	case f.Mode()&os.ModeSetgid != 0:
 		key = "sg"
-	case f.Mode()&0o111 != 0:
-		key = "ex"
 	}
 
 	if val, ok := sm.styles[key]; ok {
@@ -374,6 +372,12 @@ func (sm styleMap) get(f *file) tcell.Style {
 
 	if val, ok := sm.styles["*"+strings.ToLower(f.ext)]; ok {
 		return val
+	}
+
+	if f.Mode()&0o111 != 0 {
+		if val, ok := sm.styles["ex"]; ok {
+			return val
+		}
 	}
 
 	if val, ok := sm.styles["fi"]; ok {

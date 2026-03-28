@@ -1,6 +1,6 @@
 # Contributing
 
-Code contributions are always welcome in lf.
+Code contributions are always welcome in `lf`.
 
 If you are going to introduce a new feature, it is best to open an issue first for discussion. If your feature can be implemented as a configuration option, **please add it to the [wiki](https://github.com/gokcehan/lf/wiki)**.
 

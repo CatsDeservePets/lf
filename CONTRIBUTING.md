@@ -2,7 +2,13 @@
 
 Code contributions are always welcome in `lf`.
 
-If you are going to introduce a new feature, it is best to open an issue first for discussion. If your feature can be implemented as a configuration option, **please add it to the [wiki](https://github.com/gokcehan/lf/wiki)**.
+If you are going to introduce a new feature, it is best to open an issue first for discussion. You should also consider the following:
+
+- Whether it can be implemented entirely in user configuration instead
+- The complexity added by supporting it
+- The number of users interested in it
+
+If your feature can be implemented as a configuration option, **please add it to the [wiki](https://github.com/gokcehan/lf/wiki)**.
 
 For bug fixes, you can simply send a pull request.
 

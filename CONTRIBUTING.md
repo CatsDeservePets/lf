@@ -28,7 +28,7 @@ Adding a new option usually requires the following steps:
 - Add default option value to `init` function in `opts.go`
 - Add option evaluation logic to `setExpr.eval` in `eval.go`
 - Implement the option somewhere in the code
-- Add option name and its default value to `Quick Reference` and `Options` sections in `doc.md`
+- Add option name and its default value to `Quick Reference` and `Settings` sections in `doc.md`
 - Run `gen/doc.sh` to update the documentation (optional as it requires `docker`/`podman`, but appreciated)
 - Commit your changes and send a pull request
 

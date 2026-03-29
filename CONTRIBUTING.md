@@ -18,7 +18,7 @@ In addition to `gofmt` and friends (e.g. [go vet](https://pkg.go.dev/cmd/vet), [
 
 - Global variables are best avoided except when they are not.
   Global variable names are prefixed with `g` as in `gFooBar`.
-  Exceptions are variables that store values of environment variables, which are prefixed with `env` as in `envFooBar` and regular expressions which are prefixed with `re` as in `reFooBar` when they are global.
+  Exceptions are variables that store values of environment variables, which are prefixed with `env` as in `envFooBar`, and regular expressions, which are prefixed with `re` as in `reFooBar` when they are global.
 - Type and function names are lowercase as in `fooBar` since we don't use exporting.
 - For filename variables, `name`, `fname`, or `filename` should refer to the base name of the file as in `baz.txt`, and `path`, `fpath`, or `filepath` should refer to the full path of the file as in `/foo/bar/baz.txt`.
 - Run `go fmt` to ensure that files are formatted correctly.

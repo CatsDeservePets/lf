@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -86,8 +85,7 @@ func (sxs *sixelScreen) printSixel(win *win, screen tcell.Screen, reg *reg) {
 func cellSize(screen tcell.Screen) (int, int, error) {
 	tty, ok := screen.Tty()
 	if !ok {
-		// fallback for Windows Terminal
-		return 10, 20, nil
+		return -1, -1, fmt.Errorf("failed to get tty")
 	}
 
 	ws, err := tty.WindowSize()
@@ -97,7 +95,8 @@ func cellSize(screen tcell.Screen) (int, int, error) {
 
 	cw, ch := ws.CellDimensions()
 	if cw <= 0 || ch <= 0 {
-		return -1, -1, errors.New("cell dimensions should be greater than 0")
+		// fallback for Windows Terminal
+		return 10, 20, nil
 	}
 
 	return cw, ch, nil

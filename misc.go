@@ -283,7 +283,7 @@ func humanize(size int64) string {
 		"K", // kibi (2^10) or kilo (10^3)
 		"M", // mebi (2^20) or mega (10^6)
 		"G", // gibi (2^30) or giga (10^9)
-		"T", // tebi (2^40) or tera (10^2)
+		"T", // tebi (2^40) or tera (10^12)
 		"P", // pebi (2^50) or peta (10^15)
 		"E", // exbi (2^60) or exa (10^18)
 		"Z", // zebi (2^70) or zetta (10^21)

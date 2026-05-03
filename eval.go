@@ -1765,6 +1765,28 @@ func (e *callExpr) eval(app *app, _ []string) {
 			log.Printf("command: %s", s)
 			app.cmdHistory = append(app.cmdHistory, app.ui.cmdPrefix+s)
 			app.ui.cmdPrefix = ""
+
+			digits := s != ""
+			for i := range len(s) {
+				if !isDigit(s[i]) {
+					digits = false
+					break
+				}
+			}
+			// Interpret numeric input as a line number.
+			if digits {
+				n, err := strconv.Atoi(s)
+				if err != nil {
+					// [strconv.ErrRange] still returns a usable value.
+					log.Printf("converting line number: %s", err)
+				}
+				dir := app.nav.currDir()
+				if app.nav.move(min(max(n-1, 0), max(len(dir.files)-1, 0))) {
+					app.ui.loadFile(app, true)
+				}
+				return
+			}
+
 			p := newParser(strings.NewReader(s))
 			for p.parse() {
 				p.expr.eval(app, nil)

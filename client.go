@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v3"
+	"golang.org/x/term"
 )
 
 type State struct {
@@ -76,24 +77,33 @@ func run() {
 		writeSelection(gSelectionPath, app.selectionOut)
 	}
 
-	if gPrintLastDir {
-		dir := app.nav.currDir().path
-		if strings.ContainsAny(dir, "\n\r") {
-			log.Printf("last-dir: path contains newline: %q", dir)
-		} else {
-			fmt.Println(dir)
-		}
-	}
+	if gPrintLastDir || gPrintSelection {
+		stdoutIsTerminal := term.IsTerminal(int(os.Stdout.Fd()))
 
-	if gPrintSelection && len(app.selectionOut) > 0 {
-		for _, file := range app.selectionOut {
-			if strings.ContainsAny(file, "\n\r") {
-				log.Printf("selection: skipping path with newline: %q", file)
-			} else {
-				fmt.Println(file)
+		if gPrintLastDir {
+			printPath("last-dir", app.nav.currDir().path, stdoutIsTerminal)
+		}
+
+		if gPrintSelection {
+			for _, file := range app.selectionOut {
+				printPath("selection", file, stdoutIsTerminal)
 			}
 		}
 	}
+}
+
+// printPath prints path for -print-last-dir / -print-selection. Newlines are
+// rejected unconditionally (frame integrity for line-oriented consumers);
+// control bytes are stripped only when stdout is a terminal.
+func printPath(label, path string, stdoutIsTerminal bool) {
+	if strings.ContainsAny(path, "\n\r") {
+		log.Printf("%s: skipping path with newline: %q", label, path)
+		return
+	}
+	if stdoutIsTerminal {
+		path = sanitizeName(path)
+	}
+	fmt.Println(path)
 }
 
 func writeLastDir(filename, lastDir string) {

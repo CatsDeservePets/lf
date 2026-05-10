@@ -526,12 +526,15 @@ func readLines(reader io.ByteReader, maxLines int) (lines []string, binary bool,
 				currState = stateNormal
 			}
 		case stateSixel:
-			// Accept printable bytes (0x20-0x7E) and ESC inside the
-			// DCS frame. Reject everything else (C0, DEL, 0x80+).
+			// Inside the DCS frame, accept only printable bytes. Tolerate
+			// '\r'/'\n' (some encoders insert them for readability) by
+			// silently dropping them. Anything else aborts the frame so
+			// that an attacker cannot smuggle CSI/OSC/DCS through it.
 			switch {
 			case b == '\033':
 				buf.WriteByte(b)
 				currState = stateSixelEsc
+			case b == '\r' || b == '\n':
 			case b >= 0x20 && b <= 0x7E:
 				buf.WriteByte(b)
 			default:
@@ -539,13 +542,14 @@ func readLines(reader io.ByteReader, maxLines int) (lines []string, binary bool,
 				currState = stateNormal
 			}
 		case stateSixelEsc:
-			buf.WriteByte(b)
 			if b == '\\' {
+				buf.WriteByte(b)
 				flush(true)
 				sixel = true
 				currState = stateNormal
 			} else {
-				currState = stateSixel
+				buf.Reset()
+				currState = stateNormal
 			}
 		}
 	}

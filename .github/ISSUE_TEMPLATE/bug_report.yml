@@ -1,101 +1,45 @@
 name: Bug report
-description: Report a bug in lf
-labels: ["bug"]
-
+description: Report a problem
+labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Before reporting, please search the [existing issues](https://github.com/gokcehan/lf/issues).
-
-        Only report issues you have observed or independently verified, not hypothetical problems suggested by AI or source-code analysis.
-
+        - Search [existing issues](https://github.com/gokcehan/lf/issues) before reporting.
+        - Report only bugs you have verified yourself, including AI-generated findings.
   - type: textarea
-    id: description
     attributes:
       label: Description
       description: Describe what happened, including any error messages.
     validations:
       required: true
-
   - type: textarea
-    id: reproduction
     attributes:
       label: Steps to reproduce
       description: |
-        Describe how to reproduce the issue. Include any relevant
-        `lfrc` settings, scripts or commands. If the issue is
-        intermittent, describe when it occurs.
-      placeholder: |
-        1.
-        2.
-        3.
+        Describe how to reproduce or verify the problem.
+        Try reproducing it with `lf -config /dev/null` (Windows: `lf -config NUL`).
+        If it only occurs with your configuration, include the relevant `lfrc` settings or scripts.
     validations:
       required: true
-
   - type: textarea
-    id: expected
-    attributes:
-      label: Expected behaviour
-      description: Describe what you expected to happen.
-    validations:
-      required: true
-
-  - type: textarea
-    id: version
     attributes:
       label: lf version
       description: Paste the output of `lf -version`.
+      render: text
     validations:
       required: true
-
   - type: textarea
-    id: environment
     attributes:
       label: Environment
-      description: |
-        Include your operating system, terminal emulator and shell.
-        Add other relevant details such as `$TERM`, tmux or SSH.
+      description: Include your operating system, terminal, shell, and any other details relevant to the issue.
       placeholder: |
-        OS:
+        Operating system:
         Terminal:
         Shell:
     validations:
       required: true
-
-  - type: dropdown
-    id: config
-    attributes:
-      label: Does the issue occur without your lfrc?
-      description: |
-        Test with `lf -config /dev/null` on Unix or
-        `lf.exe -config NUL` on Windows.
-      options:
-        - "Yes"
-        - "No"
-        - "Not tested"
-    validations:
-      required: true
-
   - type: textarea
-    id: context
     attributes:
       label: Logs and additional context
-      description: |
-        If relevant, include output from `lf -log lf.log`,
-        screenshots, error messages or other information that
-        may help investigate the issue.
-    validations:
-      required: false
-
-  - type: dropdown
-    id: ai
-    attributes:
-      label: AI assistance
-      description: Was AI used to prepare or investigate this report?
-      options:
-        - "No"
-        - "Only for writing or translation"
-        - "Yes, to identify or investigate the issue"
-    validations:
-      required: true
+      description: Use `lf -log lf.log` to collect logs.

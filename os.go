@@ -5,7 +5,6 @@ package main
 import (
 	"cmp"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -69,7 +68,7 @@ func init() {
 		// When the user is not in /etc/passwd (for e.g. LDAP) and CGO_ENABLED=1 in go env,
 		// the cgo implementation of user.Current() fails even when HOME and USER are set.
 
-		log.Printf("user: %s", err)
+		warnf("getting current user: %s", err)
 		if os.Getenv("HOME") == "" {
 			panic("$HOME variable is empty or not set")
 		}
@@ -120,14 +119,14 @@ func init() {
 	if runtimeDir == "" {
 		runtimeDir = filepath.Join(os.TempDir(), fmt.Sprintf("lf-%s", gUser.Uid))
 		if err := os.MkdirAll(runtimeDir, 0o700); err != nil {
-			log.Fatalf("creating runtime dir: %s", err)
+			fatalf("creating runtime dir: %s", err)
 		}
 		st, err := os.Stat(runtimeDir)
 		if err != nil {
-			log.Fatalf("stat runtime dir: %s", err)
+			fatalf("stat runtime dir: %s", err)
 		}
 		if stat, ok := st.Sys().(*syscall.Stat_t); !ok || stat.Uid != uint32(os.Geteuid()) {
-			log.Fatalf("runtime dir not owned by current user: %s", runtimeDir)
+			fatalf("runtime dir not owned by current user: %s", runtimeDir)
 		}
 	}
 

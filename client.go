@@ -31,7 +31,7 @@ func run() {
 	if gLogPath != "" {
 		f, err := os.OpenFile(gLogPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o600)
 		if err != nil {
-			log.Fatalf("failed to open log file: %s", err)
+			fatalf("opening log file: %s", err)
 		}
 		defer f.Close()
 		log.SetOutput(f)
@@ -39,14 +39,14 @@ func run() {
 		log.SetOutput(io.Discard)
 	}
 
-	log.Printf("*************** starting client, PID: %d ***************", gClientID)
+	infof("*************** starting client, PID: %d ***************", gClientID)
 
 	var screen tcell.Screen
 	var err error
 	if screen, err = tcell.NewScreen(); err != nil {
-		log.Fatalf("creating screen: %s", err)
+		fatalf("creating screen: %s", err)
 	} else if err = screen.Init(); err != nil {
-		log.Fatalf("initializing screen: %s", err)
+		fatalf("initializing screen: %s", err)
 	}
 	if gOpts.mouse {
 		screen.EnableMouse()
@@ -97,7 +97,7 @@ func run() {
 // control bytes are stripped only when stdout is a terminal.
 func printPath(label, path string, stdoutIsTerminal bool) {
 	if strings.ContainsAny(path, "\n\r") {
-		log.Printf("%s: skipping path with newline: %q", label, path)
+		warnf("%s: skipping path with newline: %q", label, path)
 		return
 	}
 	if stdoutIsTerminal {
@@ -108,40 +108,40 @@ func printPath(label, path string, stdoutIsTerminal bool) {
 
 func writeLastDir(filename, lastDir string) {
 	if strings.ContainsAny(lastDir, "\n\r") {
-		log.Printf("last-dir: path contains newline: %q", lastDir)
+		warnf("last-dir: skipping path with newline: %q", lastDir)
 		return
 	}
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Printf("opening last dir file: %s", err)
+		errorf("opening last dir file: %s", err)
 		return
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(lastDir)
 	if err != nil {
-		log.Printf("writing last dir file: %s", err)
+		errorf("writing last dir file: %s", err)
 	}
 }
 
 func writeSelection(filename string, selection []string) {
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Printf("opening selection file: %s", err)
+		errorf("opening selection file: %s", err)
 		return
 	}
 	defer f.Close()
 
 	filtered := slices.DeleteFunc(slices.Clone(selection), func(s string) bool {
 		if strings.ContainsAny(s, "\n\r") {
-			log.Printf("selection: skipping path with newline: %q", s)
+			warnf("selection: skipping path with newline: %q", s)
 			return true
 		}
 		return false
 	})
 	_, err = f.WriteString(strings.Join(filtered, "\n"))
 	if err != nil {
-		log.Printf("writing selection file: %s", err)
+		errorf("writing selection file: %s", err)
 	}
 }
 
@@ -153,14 +153,14 @@ func readExpr() <-chan expr {
 
 		c, err := net.Dial("unix", gSocketPath)
 		for err != nil {
-			log.Printf("connecting server: %s", err)
+			debugf("connecting to server (retrying in %s): %s", duration, err)
 			time.Sleep(duration)
 			duration *= 2
 			c, err = net.Dial("unix", gSocketPath)
 		}
 
 		if _, err := fmt.Fprintf(c, "conn %d\n", gClientID); err != nil {
-			log.Printf("registering with server: %s", err)
+			errorf("registering with server: %s", err)
 			return
 		}
 
@@ -169,7 +169,7 @@ func readExpr() <-chan expr {
 
 		s := bufio.NewScanner(c)
 		for s.Scan() {
-			log.Printf("recv: %s", s.Text())
+			debugf("recv: %s", s.Text())
 
 			// `query` has to be handled outside of the main thread, which is
 			// blocked when running a synchronous shell command ("$" or "!").
@@ -180,7 +180,7 @@ func readExpr() <-chan expr {
 				state := gState.data[rest]
 				gState.mutex.Unlock()
 				if _, err := fmt.Fprintln(c, state); err != nil {
-					log.Printf("sending response to server: %s", err)
+					errorf("sending response to server: %s", err)
 					return
 				}
 			} else {
@@ -192,7 +192,7 @@ func readExpr() <-chan expr {
 		}
 
 		if err := s.Err(); err != nil {
-			log.Printf("reading from server: %s", err)
+			errorf("reading from server: %s", err)
 		}
 
 		c.Close()

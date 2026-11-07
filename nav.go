@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"maps"
 	"os"
 	"os/exec"
@@ -48,7 +47,7 @@ type file struct {
 func newFile(path string) *file {
 	lstat, err := os.Lstat(path)
 	if err != nil {
-		log.Printf("getting file information: %s", err)
+		warnf("getting file info: %s", err)
 		return &file{
 			FileInfo:   &fakeStat{name: filepath.Base(path)},
 			linkState:  notLink,
@@ -75,7 +74,7 @@ func newFile(path string) *file {
 		}
 		linkTarget, err = os.Readlink(path)
 		if err != nil {
-			log.Printf("reading link target: %s", err)
+			warnf("reading link target: %s", err)
 		}
 	}
 
@@ -100,13 +99,13 @@ func newFile(path string) *file {
 	if lstat.IsDir() && getDirCounts(filepath.Dir(path)) {
 		d, err := os.Open(path)
 		if err != nil {
-			log.Printf("opening file: %s", err)
+			warnf("counting directory entries: %s", err)
 		} else {
 			names, err := d.Readdirnames(10000)
 			d.Close()
 
 			if names == nil && err != io.EOF {
-				log.Printf("reading directory: %s", err)
+				warnf("counting directory entries: %s", err)
 			} else {
 				dirCount = len(names)
 			}
@@ -187,7 +186,7 @@ type dir struct {
 func newDir(path string) *dir {
 	files, err := readdir(path)
 	if err != nil {
-		log.Printf("reading directory: %s", err)
+		errorf("reading directory: %s", err)
 	}
 
 	return &dir{
@@ -516,7 +515,7 @@ func (nav *nav) checkDir(dir *dir) {
 
 	s, err := os.Stat(dir.path)
 	if err != nil {
-		log.Printf("getting directory info: %s", err)
+		warnf("getting directory info: %s", err)
 		return
 	}
 
@@ -624,7 +623,7 @@ func (nav *nav) cdJumpListPrev() {
 	if nav.jumpListInd > 0 {
 		nav.jumpListInd--
 		if err := nav.cd(nav.jumpList[nav.jumpListInd]); err != nil {
-			log.Print(err)
+			errorf("changing directory: %s", err)
 		}
 	}
 }
@@ -633,7 +632,7 @@ func (nav *nav) cdJumpListNext() {
 	if nav.jumpListInd < len(nav.jumpList)-1 {
 		nav.jumpListInd++
 		if err := nav.cd(nav.jumpList[nav.jumpListInd]); err != nil {
-			log.Print(err)
+			errorf("changing directory: %s", err)
 		}
 	}
 }
@@ -798,12 +797,12 @@ func (nav *nav) previewLoop(ui *ui) {
 
 			if err := cmd.Run(); err != nil {
 				if _, ok := errors.AsType[*exec.ExitError](err); !ok {
-					log.Printf("cleaning preview: %s", err)
+					errorf("cleaning preview: %s", err)
 				}
 			}
 			if s := strings.TrimSpace(stderr.String()); s != "" {
 				s = strings.Join(strings.Fields(s), " ")
-				log.Printf("cleaning preview (stderr): %s", s)
+				debugf("cleaning preview (stderr): %s", s)
 			}
 			nav.volatilePreview = false
 		}
@@ -892,12 +891,12 @@ func (nav *nav) preview(path string, win *win, mode string) {
 
 		out, err := cmd.StdoutPipe()
 		if err != nil {
-			log.Printf("previewing file: %s", err)
+			errorf("previewing file: %s", err)
 			return
 		}
 
 		if err := cmd.Start(); err != nil {
-			log.Printf("previewing file: %s", err)
+			errorf("previewing file: %s", err)
 			out.Close()
 			return
 		}
@@ -907,12 +906,12 @@ func (nav *nav) preview(path string, win *win, mode string) {
 				if _, ok := errors.AsType[*exec.ExitError](err); ok {
 					reg.volatile = true
 				} else {
-					log.Printf("loading file: %s", err)
+					errorf("previewing file: %s", err)
 				}
 			}
 			if s := strings.TrimSpace(stderr.String()); s != "" {
 				s = strings.Join(strings.Fields(s), " ")
-				log.Printf("loading file (stderr): %s", s)
+				debugf("previewing file (stderr): %s", s)
 			}
 		}()
 		defer out.Close()
@@ -920,7 +919,7 @@ func (nav *nav) preview(path string, win *win, mode string) {
 	} else {
 		lstat, err := os.Lstat(path)
 		if err != nil {
-			log.Printf("lstat: %s", err)
+			errorf("previewing file: %s", err)
 			return
 		}
 
@@ -930,7 +929,7 @@ func (nav *nav) preview(path string, win *win, mode string) {
 
 		f, err := os.Open(path)
 		if err != nil {
-			log.Printf("opening file: %s", err)
+			errorf("previewing file: %s", err)
 			return
 		}
 
@@ -1151,7 +1150,7 @@ func (nav *nav) open() error {
 	}
 
 	if err := os.Chdir(curr.path); err != nil {
-		return fmt.Errorf("open: %w", err)
+		return err
 	}
 
 	nav.dirPaths = append(nav.dirPaths, curr.path)
@@ -1814,7 +1813,7 @@ func isFiltered(f os.FileInfo, filter []string) bool {
 	for _, pattern := range filter {
 		matched, err := searchMatch(f.Name(), strings.TrimPrefix(pattern, "!"), gOpts.filtermethod)
 		if err != nil {
-			log.Printf("Filter Error: %s", err)
+			errorf("applying filter: %s", err)
 			return false
 		}
 		if strings.HasPrefix(pattern, "!") && matched {
@@ -1879,7 +1878,7 @@ func (nav *nav) writeMarks() error {
 			continue
 		}
 		if strings.ContainsAny(nav.marks[k], "\n\r") {
-			log.Printf("marks: skipping mark '%s' with newline in path: %q", k, nav.marks[k])
+			warnf("marks: skipping mark '%s' with newline in path: %q", k, nav.marks[k])
 			continue
 		}
 		_, err = fmt.Fprintf(f, "%s:%s\n", k, nav.marks[k])
@@ -1938,7 +1937,7 @@ func (nav *nav) writeTags() error {
 
 	for _, k := range slices.Sorted(maps.Keys(nav.tags)) {
 		if strings.ContainsAny(k, "\n\r") {
-			log.Printf("tags: skipping tag with newline in path: %q", k)
+			warnf("tags: skipping tag with newline in path: %q", k)
 			continue
 		}
 		_, err = fmt.Fprintf(f, "%s:%s\n", k, nav.tags[k])
@@ -1954,7 +1953,7 @@ func (nav *nav) currDir() *dir {
 	if len(nav.dirPaths) == 0 {
 		wd, err := os.Getwd()
 		if err != nil {
-			log.Printf("getting current directory: %s", err)
+			errorf("getting current directory: %s", err)
 		}
 		nav.loadDirs(wd)
 	}

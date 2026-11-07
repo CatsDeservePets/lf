@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -76,4 +77,9 @@ func warnf(format string, args ...any) {
 
 func errorf(format string, args ...any) {
 	logf(logError, format, args...)
+}
+
+func fatalf(format string, args ...any) {
+	errorf(format, args...)
+	os.Exit(1)
 }

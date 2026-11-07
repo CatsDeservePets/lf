@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -125,18 +124,18 @@ func parseColor(toks []string) (tcell.Color, int, error) {
 }
 
 func (sm styleMap) parseFile(path string) {
-	log.Printf("reading file: %s", path)
+	infof("reading file: %s", path)
 
 	f, err := os.Open(path)
 	if err != nil {
-		log.Printf("opening colors file: %s", err)
+		warnf("opening colors file: %s", err)
 		return
 	}
 	defer f.Close()
 
 	pairs, err := readPairs(f)
 	if err != nil {
-		log.Printf("reading colors file: %s", err)
+		warnf("reading colors file: %s", err)
 		return
 	}
 
@@ -155,7 +154,7 @@ func (sm *styleMap) parseGNU(env string) {
 		pair := strings.Split(entry, "=")
 
 		if len(pair) != 2 {
-			log.Printf("invalid $LS_COLORS entry: %s", entry)
+			warnf("invalid $LS_COLORS entry: %s", entry)
 			return
 		}
 
@@ -182,7 +181,7 @@ func (sm *styleMap) parsePair(pair []string) {
 // parseBSD parses the $LSCOLORS environment variable.
 func (sm styleMap) parseBSD(env string) {
 	if len(env) != 22 {
-		log.Printf("invalid $LSCOLORS variable: %s", env)
+		warnf("invalid $LSCOLORS variable: %s", env)
 		return
 	}
 
@@ -199,7 +198,7 @@ func (sm styleMap) parseBSD(env string) {
 		case 'a' <= r1 && r1 <= 'h':
 			st = st.Foreground(tcell.PaletteColor(int(r1 - 'a')))
 		default:
-			log.Printf("invalid $LSCOLORS entry: %c", r1)
+			warnf("invalid $LSCOLORS entry: %c", r1)
 			return tcell.StyleDefault
 		}
 
@@ -209,7 +208,7 @@ func (sm styleMap) parseBSD(env string) {
 		case 'a' <= r2 && r2 <= 'h':
 			st = st.Background(tcell.PaletteColor(int(r2 - 'a')))
 		default:
-			log.Printf("invalid $LSCOLORS entry: %c", r2)
+			warnf("invalid $LSCOLORS entry: %c", r2)
 			return tcell.StyleDefault
 		}
 

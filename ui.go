@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"cmp"
 	"fmt"
-	"log"
 	"maps"
 	"os"
 	"path/filepath"
@@ -222,7 +221,7 @@ func fileInfo(f *file, d *dir, userWidth, groupWidth, customWidth int) (string, 
 			fmt.Fprintf(&info, " %*s", customWidth, "")
 			custom = fmt.Sprintf(" %s%*s", f.customInfo, customWidth-printLength(f.customInfo), "")
 		default:
-			log.Printf("unknown info type: %s", s)
+			warnf("unknown info type: %s", s)
 		}
 	}
 
@@ -586,12 +585,12 @@ func (ui *ui) echo(msg string) {
 
 func (ui *ui) echomsg(msg string) {
 	ui.echo(sanitizeMessage(msg))
-	log.Print(msg)
+	infof("%s", msg)
 }
 
 func (ui *ui) echoerr(msg string) {
 	ui.echo(fmt.Sprintf(optionToFmtstr(gOpts.errorfmt), sanitizeName(msg)))
-	log.Printf("error: %s", msg)
+	errorf("%s", msg)
 }
 
 func (ui *ui) echoerrf(format string, a ...any) {
@@ -1353,13 +1352,14 @@ func listMarks(marks map[string]string) string {
 func listFilesInCurrDir(nav *nav) string {
 	dir := nav.currDir()
 	if dir.loading {
-		log.Printf("listFilesInCurrDir(): %s is still loading, `files` isn't ready for remote query", dir.path)
+		debugf("files query: directory still loading: %q", dir.path)
 		return ""
 	}
 
 	b := new(strings.Builder)
 	for _, file := range dir.files {
 		if strings.ContainsAny(file.path, "\n\r") {
+			warnf("files query: skipping path with newline: %q", file.path)
 			continue
 		}
 		fmt.Fprintln(b, file.path)
@@ -1426,7 +1426,7 @@ func (ui *ui) readNormalEvent(ev tcell.Event, nav *nav) expr {
 		expr := keys[ui.keyAcc]
 		if ui.keyCount != "" {
 			if count, err := strconv.Atoi(ui.keyCount); err != nil {
-				log.Printf("converting command count: %s", err)
+				warnf("parsing command count: %s", err)
 			} else if count > 0 {
 				switch e := expr.(type) {
 				case *callExpr:
@@ -1540,9 +1540,9 @@ func (ui *ui) readNormalEvent(ev tcell.Event, nav *nav) expr {
 	case *tcell.EventResize:
 		return &callExpr{"redraw", nil, 1}
 	case *tcell.EventError:
-		log.Printf("Got EventError: '%s' at %s", tev.Error(), tev.When())
+		errorf("event error: %q at %s", tev.Error(), tev.When())
 	case *tcell.EventInterrupt:
-		log.Printf("Got EventInterrupt: at %s", tev.When())
+		debugf("event interrupt at %s", tev.When())
 	case *tcell.EventFocus:
 		if tev.Focused {
 			return &callExpr{"on-focus-gained", nil, 1}
@@ -1620,7 +1620,7 @@ func anyKey() {
 
 	b := make([]byte, 8)
 	if _, err := os.Stdin.Read(b); err != nil {
-		log.Printf("Failed to read key press: %s", err)
+		warnf("reading key press: %s", err)
 	}
 }
 

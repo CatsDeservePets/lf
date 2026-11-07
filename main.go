@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -58,7 +57,7 @@ func (a *arrayFlag) String() string {
 func init() {
 	h, err := os.Hostname()
 	if err != nil {
-		log.Printf("hostname: %s", err)
+		warnf("getting hostname: %s", err)
 	}
 	gHostname = h
 
@@ -83,7 +82,7 @@ func exportEnvVars() {
 
 	level, err := strconv.Atoi(envLevel)
 	if err != nil {
-		log.Printf("reading lf level: %s", err)
+		warnf("parsing $LF_LEVEL: %s", err)
 	}
 
 	level++
@@ -161,7 +160,7 @@ func getOptsMap() map[string]string {
 func exportLfPath() {
 	lfPath, err := os.Executable()
 	if err != nil {
-		log.Printf("getting path to lf binary: %s", err)
+		warnf("getting path to lf binary: %s", err)
 		lfPath = "lf"
 	}
 	os.Setenv("lf", quoteString(lfPath))
@@ -176,7 +175,7 @@ func exportOpts() {
 func startServer() {
 	cmd := detachedCommand(os.Args[0], "-server")
 	if err := cmd.Start(); err != nil {
-		log.Printf("starting server: %s", err)
+		errorf("starting server: %s", err)
 	}
 }
 
@@ -185,7 +184,7 @@ func checkServer() {
 		startServer()
 	} else if _, err := net.Dial("unix", gSocketPath); err != nil {
 		if err := os.Remove(gSocketPath); err != nil {
-			log.Print(err)
+			errorf("removing socket: %s", err)
 		}
 		startServer()
 	}
@@ -323,7 +322,7 @@ Options:
 	if gLogPath != "" {
 		path, err := filepath.Abs(gLogPath)
 		if err != nil {
-			log.Fatalf("getting log path: %s", err)
+			fatalf("getting log path: %s", err)
 		}
 		gLogPath = path
 	}
@@ -331,10 +330,10 @@ Options:
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
-			log.Fatalf("could not create CPU profile: %s", err)
+			fatalf("could not create CPU profile: %s", err)
 		}
 		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatalf("could not start CPU profile: %s", err)
+			fatalf("could not start CPU profile: %s", err)
 		}
 		defer pprof.StopCPUProfile()
 	}
@@ -349,8 +348,7 @@ Options:
 	case *remoteCmd != "":
 		resp, err := remote(*remoteCmd)
 		if err != nil {
-			log.Fatalf("remote command: %s", err)
-			return
+			fatalf("remote command: %s", err)
 		}
 		// sanitize untrusted names when writing to a terminal
 		if term.IsTerminal(int(os.Stdout.Fd())) {
@@ -363,7 +361,7 @@ Options:
 		fmt.Print(resp)
 	case *serverMode:
 		if err := os.Chdir(gUser.HomeDir); err != nil {
-			log.Print(err)
+			warnf("changing to home directory: %s", err)
 		}
 		serve()
 	default:
@@ -387,7 +385,7 @@ Options:
 		case 1:
 			gSelect = flag.Arg(0)
 		default:
-			fmt.Fprintln(os.Stderr, "only single file or directory is allowed")
+			fmt.Fprintln(os.Stderr, "only one file or directory may be specified")
 			os.Exit(2)
 		}
 
@@ -400,11 +398,11 @@ Options:
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
+			fatalf("could not create memory profile: %s", err)
 		}
 		runtime.GC()
 		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
+			fatalf("could not write memory profile: %s", err)
 		}
 		f.Close()
 	}

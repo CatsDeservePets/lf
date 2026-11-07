@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"maps"
 	"os"
 	"path/filepath"
@@ -46,7 +45,7 @@ func (watch *watch) start() {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("start watcher: %s", err)
+		errorf("starting watcher: %s", err)
 		return
 	}
 
@@ -79,7 +78,7 @@ func (watch *watch) add(path string) {
 	}
 
 	if err := watch.watcher.Add(path); err != nil {
-		log.Printf("watch path %s: %s", path, err)
+		errorf("watching path %s: %s", path, err)
 		return
 	}
 
